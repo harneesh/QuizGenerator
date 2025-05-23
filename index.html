@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quiz Generator with Single Blank Support</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  :root {
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --secondary-color: #f8fafc;
+    --accent-color: #06b6d4;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --hover-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.15);
+  }
+  
+  body { 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--gradient-bg);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+  }
+  
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    padding: 3rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+  }
+  
+  .header h1 {
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .header p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1rem;
+    font-weight: 300;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .content {
+    padding: 3rem 2rem;
+  }
+  
+  .input-group {
+    margin-bottom: 2rem;
+  }
+  
+  .input-group label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    letter-spacing: -0.01em;
+  }
+  
+  textarea {
+    width: 100%;
+    height: 180px;
+    padding: 1.25rem;
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    resize: vertical;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--secondary-color);
+    color: var(--text-primary);
+  }
+  
+  textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    background: white;
+    transform: translateY(-1px);
+  }
+  
+  textarea::placeholder {
+    color: var(--text-secondary);
+  }
+  
+  .number-input-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 200px;
+  }
+  
+  input[type="number"] {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+    background: var(--secondary-color);
+    color: var(--text-primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    background: white;
+    transform: translateY(-1px);
+  }
+  
+  .btn-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+  
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    min-width: 180px;
+  }
+  
+  button:not(:disabled) {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+  }
+  
+  button:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
+  }
+  
+  button:not(:disabled):active {
+    transform: translateY(0);
+  }
+  
+  button:disabled {
+    background: var(--text-secondary);
+    color: white;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  
+  button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+  
+  button:not(:disabled):hover::before {
+    left: 100%;
+  }
+  
+  #loading {
+    display: none;
+    color: var(--text-secondary);
+    font-style: italic;
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
+  #quiz-container {
+    margin-top: 3rem;
+  }
+  
+  .question {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .question:hover {
+    box-shadow: var(--hover-shadow);
+    transform: translateY(-2px);
+  }
+  
+  .question p {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    line-height: 1.7;
+  }
+  
+  .question strong {
+    color: var(--primary-color);
+    font-weight: 700;
+  }
+  
+  .options {
+    display: grid;
+    gap: 0.75rem;
+  }
+  
+  .options label {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: var(--secondary-color);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .options label:hover {
+    background: rgba(37, 99, 235, 0.05);
+    border-color: var(--primary-color);
+    transform: translateX(4px);
+  }
+  
+  .options label:has(input:checked) {
+    background: rgba(37, 99, 235, 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 600;
+  }
+  
+  .options input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 1rem;
+    accent-color: var(--primary-color);
+    transform: scale(1.2);
+  }
+  
+  #result {
+    background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    font-weight: 600;
+    font-size: 1.25rem;
+    text-align: center;
+    margin-top: 2rem;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    animation: slideInUp 0.5s ease-out;
+  }
+  
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .status-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-left: 1rem;
+  }
+  
+  .status-indicator::before {
+    content: '✓';
+    margin-right: 0.5rem;
+    font-weight: bold;
+  }
+  
+  @media (max-width: 768px) {
+    body {
+      padding: 1rem;
+    }
+    
+    .container {
+      border-radius: 16px;
+    }
+    
+    .header {
+      padding: 2rem 1.5rem;
+    }
+    
+    .header h1 {
+      font-size: 2rem;
+    }
+    
+    .content {
+      padding: 2rem 1.5rem;
+    }
+    
+    .btn-container {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    button {
+      min-width: auto;
+    }
+    
+    .number-input-wrapper {
+      width: 100%;
+    }
+    
+    .question {
+      padding: 1.5rem;
+    }
+    
+    .options label {
+      padding: 0.875rem 1rem;
+    }
+  }
+  
+  /* Smooth transitions for dynamic content */
+  #quiz-container * {
+    animation: fadeInUp 0.6s ease-out;
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>AI Quiz Generator</h1>
+    <p>Transform any text into engaging multiple-choice questions</p>
+  </div>
+  
+  <div class="content">
+    <div class="input-group">
+      <label for="inputText">Source Text</label>
+      <textarea id="inputText" placeholder="Paste your educational content here... The AI will analyze your text and create intelligent quiz questions with contextual distractors.">Albert Einstein was born in Ulm, Germany in 1879. He developed the theory of relativity. The Eiffel Tower is located in Paris.</textarea>
+    </div>
+
+    <div class="input-group">
+      <label for="numQuestions">Number of Questions</label>
+      <div class="number-input-wrapper">
+        <input type="number" id="numQuestions" min="1" max="20" value="5" />
+      </div>
+    </div>
+
+    <div class="btn-container">
+      <button id="startQuiz" disabled>Loading NLP library...</button>
+      <div id="loading">Loading natural language processing library, please wait...</div>
+    </div>
+
+    <div id="quiz-container"></div>
+    <div id="result"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/compromise@latest/builds/compromise.min.js"></script>
+
+<script>
+let nlpLoaded = false;
+window.addEventListener('load', () => {
+  if (typeof window.nlp !== 'undefined') {
+    nlpLoaded = true;
+    initQuizGenerator();
+  } else {
+    setTimeout(() => {
+      if (typeof window.nlp === 'undefined') {
+        document.getElementById('loading').textContent = 'Failed to load NLP library. Using simple mode.';
+        document.getElementById('startQuiz').disabled = false;
+        document.getElementById('startQuiz').textContent = 'Generate Quiz (Simple Mode)';
+        initQuizGenerator(true);
+      }
+    }, 5000);
+  }
+});
+
+function initQuizGenerator(simpleMode = false) {
+  const stopwords = new Set([
+    "the", "and", "a", "an", "in", "on", "of", "to", "is", "are", "was", "were",
+    "with", "for", "as", "by", "at", "from", "that", "this", "it", "be", "or",
+    "which", "because", "but", "if", "then", "so", "out", "up", "down", "into",
+    "about", "over", "after", "before", "between", "also", "not", "no", "too",
+    "very", "can", "will", "just", "did", "do", "does", "have", "has", "had"
+  ]);
+
+  document.getElementById('startQuiz').disabled = false;
+  document.getElementById('startQuiz').textContent = 'Generate Quiz';
+  document.getElementById('loading').style.display = 'none';
+
+  function splitIntoSentences(text) {
+    return text.match(/[^.!?]+[.!?]+/g) || [];
+  }
+
+  function randomChoice(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function getMultiWordPhrase(sentence, word, allWords) {
+    const wordsInSentence = sentence.match(/\b[\w'-]+\b/g) || [];
+    const wordIndex = wordsInSentence.findIndex(w => w.toLowerCase() === word.toLowerCase());
+    
+    if (wordIndex === -1) return word;
+    
+    const possiblePhrases = [];
+    
+    // Try to create meaningful 2-3 word phrases
+    if (wordIndex > 0 && !stopwords.has(wordsInSentence[wordIndex-1].toLowerCase())) {
+      possiblePhrases.push(`${wordsInSentence[wordIndex-1]} ${word}`);
+    }
+    
+    if (wordIndex < wordsInSentence.length - 1 && !stopwords.has(wordsInSentence[wordIndex+1].toLowerCase())) {
+      possiblePhrases.push(`${word} ${wordsInSentences[wordIndex+1]}`);
+    }
+    
+    if (wordIndex > 0 && wordIndex < wordsInSentence.length - 1 && 
+        !stopwords.has(wordsInSentence[wordIndex-1].toLowerCase()) && 
+        !stopwords.has(wordsInSentence[wordIndex+1].toLowerCase())) {
+      possiblePhrases.push(`${wordsInSentence[wordIndex-1]} ${word} ${wordsInSentence[wordIndex+1]}`);
+    }
+    
+    return possiblePhrases.length > 0 ? randomChoice(possiblePhrases) : word;
+  }
+
+  function generateOptions(correctAnswer, words, sentence) {
+    let options = new Set();
+    options.add(correctAnswer);
+
+    // Filter words to only include meaningful candidates
+    let candidates = words.filter(w => {
+      const lowerW = w.toLowerCase();
+      const lowerCorrect = correctAnswer.toLowerCase();
+      return !lowerCorrect.includes(lowerW) &&
+             !stopwords.has(lowerW) &&
+             w.length > 3;
+    });
+
+    // Generate high-quality distractors
+    while (options.size < 4 && candidates.length > 0) {
+      let w = randomChoice(candidates);
+      let phrase = getMultiWordPhrase(sentence, w, words);
+      
+      // Only add if it's meaningfully different from existing options
+      if (!Array.from(options).some(opt => opt.toLowerCase().includes(phrase.toLowerCase()))) {
+        options.add(phrase);
+      }
+      candidates = candidates.filter(c => c.toLowerCase() !== w.toLowerCase());
+    }
+
+    return Array.from(options).sort(() => Math.random() - 0.5);
+  }
+
+  function maskWord(sentence, wordOrPhrase) {
+    // Always replace the entire phrase with a single blank
+    const regex = new RegExp(`\\b${wordOrPhrase.replace(/ /g, '\\s+')}\\b`, 'gi');
+    return sentence.replace(regex, '_____');
+  }
+
+  function selectWordToMask(words, wordFreq, sentence) {
+    // First try to find meaningful multi-word phrases (2-3 words)
+    const sentenceWords = sentence.match(/\b[\w'-]+\b/g) || [];
+    const possiblePhrases = [];
+    
+    for (let i = 0; i < sentenceWords.length - 1; i++) {
+      if (!stopwords.has(sentenceWords[i].toLowerCase()) && 
+          !stopwords.has(sentenceWords[i+1].toLowerCase())) {
+        possiblePhrases.push(`${sentenceWords[i]} ${sentenceWords[i+1]}`);
+      }
+      
+      if (i < sentenceWords.length - 2 &&
+          !stopwords.has(sentenceWords[i+2].toLowerCase())) {
+        possiblePhrases.push(`${sentenceWords[i]} ${sentenceWords[i+1]} ${sentenceWords[i+2]}`);
+      }
+    }
+    
+    // Filter phrases that don't contain stopwords
+    const validPhrases = possiblePhrases.filter(phrase => {
+      return phrase.split(' ').every(w => !stopwords.has(w.toLowerCase()));
+    });
+    
+    if (validPhrases.length > 0) {
+      return randomChoice(validPhrases);
+    }
+    
+    // Fallback to single meaningful words
+    const meaningfulWords = words.filter(w => 
+      !stopwords.has(w.toLowerCase()) && w.length > 3
+    );
+    
+    return meaningfulWords.length > 0 ? randomChoice(meaningfulWords) : null;
+  }
+
+  function generateQuizQuestions(text, numQuestions, simpleMode = false) {
+    if (!text || typeof text !== 'string') {
+      throw new Error('Invalid input text');
+    }
+    
+    let sentences = splitIntoSentences(text);
+    let allWordsRaw = text.match(/\b[\w'-]+\b/g) || [];
+
+    // Frequency count of all words (case-insensitive)
+    let wordFreq = {};
+    allWordsRaw.forEach(w => {
+      let lw = w.toLowerCase();
+      wordFreq[lw] = (wordFreq[lw] || 0) + 1;
+    });
+
+    let allWords = [...new Set(allWordsRaw.filter(w => w.length > 3))];
+
+    let nouns = [];
+    if (!simpleMode && window.nlp) {
+      try {
+        let doc = window.nlp(text);
+        // Extract nouns and proper nouns
+        nouns = doc.nouns().out('array');
+        nouns = nouns.filter(w => {
+          const lowerW = w.toLowerCase();
+          return !stopwords.has(lowerW) && w.length > 3;
+        });
+      } catch (e) {
+        console.warn('NLP processing failed, falling back to simple mode', e);
+        simpleMode = true;
+      }
+    }
+
+    let questions = [];
+    let usedSentences = new Set();
+
+    for (let sentence of sentences) {
+      if (questions.length >= numQuestions) break;
+      if (usedSentences.has(sentence)) continue;
+
+      const wordsInSentence = sentence.match(/\b[\w'-]+\b/g) || [];
+      const contentWords = wordsInSentence.filter(w => 
+        !stopwords.has(w.toLowerCase()) && w.length > 3
+      );
+      
+      if (contentWords.length < 2) continue;
+
+      let phraseToMask = selectWordToMask(contentWords, wordFreq, sentence);
+      if (!phraseToMask) continue;
+
+      let options = generateOptions(
+        phraseToMask, 
+        allWords.filter(w => !phraseToMask.toLowerCase().includes(w.toLowerCase())),
+        sentence
+      );
+
+      if (options.length >= 2) {
+        questions.push({
+          questionText: maskWord(sentence, phraseToMask),
+          correctAnswer: phraseToMask,
+          options: options
+        });
+        usedSentences.add(sentence);
+      }
+    }
+
+    return questions;
+  }
+
+  document.getElementById('startQuiz').addEventListener('click', () => {
+    const text = document.getElementById('inputText').value.trim();
+    let numQuestions = parseInt(document.getElementById('numQuestions').value);
+
+    if (!text) {
+      alert('Please enter some text.');
+      return;
+    }
+    if (isNaN(numQuestions) || numQuestions < 1 || numQuestions > 20) {
+      alert('Please enter a valid number of questions between 1 and 20.');
+      return;
+    }
+
+    try {
+      const simpleMode = !nlpLoaded || document.getElementById('startQuiz').textContent.includes('Simple Mode');
+      let questions = generateQuizQuestions(text, numQuestions, simpleMode);
+
+      console.log('Generated questions:', questions);
+
+      if (questions.length === 0) {
+        alert('Could not generate any questions from the text. Try using longer sentences with more content words.');
+        return;
+      }
+
+      const quizContainer = document.getElementById('quiz-container');
+      quizContainer.innerHTML = '';
+
+      questions.forEach((q, i) => {
+        const div = document.createElement('div');
+        div.className = 'question';
+        div.innerHTML = `<p><strong>Q${i+1}.</strong> ${q.questionText}</p>`;
+        let optsHtml = '';
+        q.options.forEach((opt, idx) => {
+          const optId = `q${i}_opt${idx}`;
+          optsHtml += `
+            <label>
+              <input type="radio" name="q${i}" value="${opt}" id="${optId}" />
+              ${opt}
+            </label>
+          `;
+        });
+        div.innerHTML += `<div class="options">${optsHtml}</div>`;
+        quizContainer.appendChild(div);
+      });
+
+      const submitBtn = document.createElement('button');
+      submitBtn.textContent = 'Submit Quiz';
+      submitBtn.style.marginTop = '10px';
+      quizContainer.appendChild(submitBtn);
+
+      submitBtn.addEventListener('click', () => {
+        let score = 0;
+        for (let i=0; i<questions.length; i++) {
+          const selected = document.querySelector(`input[name="q${i}"]:checked`);
+          if (selected && selected.value.toLowerCase() === questions[i].correctAnswer.toLowerCase()) {
+            score++;
+          }
+        }
+        const resultDiv = document.getElementById('result');
+        resultDiv.textContent = `You scored ${score} out of ${questions.length}`;
+        submitBtn.disabled = true;
+      });
+
+      document.getElementById('result').textContent = '';
+    } catch (error) {
+      console.error('Error generating quiz:', error);
+      alert('An error occurred while generating the quiz. Please try again with different text.');
+    }
+  });
+}
+</script>
+
+</body>
+</html>
